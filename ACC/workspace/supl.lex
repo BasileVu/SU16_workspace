@@ -12,32 +12,30 @@ WHITESPACES     [\ \n]*
 DIGIT           [0-9]
 NUMBER          {DIGIT}+
 ALPHA           [a-zA-Z]
-STRING          \"({ALPHA}|{DIGIT})*\"
-IDENT           {ALPHA}({ALPHA}|{NUMBER})+
+STRING          \".*\"
+IDENT           {ALPHA}({ALPHA}|{NUMBER})*
 OP              [\+\-\*\/\%\^]
-COMPARATOR      ==|<=|<|&&
-EXPRESSION      {NUMBER}|{IDENT}
+COMPARATOR      ==|<=|<|>|>=|&&|\|\|
 
 TYPE            int|void
-
-IF              if
-WHILE           while
-RETURN          return
+KEYWORD         if|else|while|read|write|print|return
 
 %%
 {NUMBER}        printf("number: %s\n", yytext);
 {TYPE}          printf("type: %s\n", yytext);
 {OP}            printf("op: %s\n", yytext);
-{RETURN}        printf("return\n");
-{IDENT}         printf("ident: %s\n", yytext);
 {COMPARATOR}    printf("comparator: %s\n", yytext);
+{KEYWORD}       printf("keyword: %s\n", yytext);
+{STRING}        printf("string: %s\n", yytext);
+{IDENT}         printf("ident: %s\n", yytext);
 
+=               printf("=\n");
 \(              printf("(\n");
 \)              printf(")\n");
 \{              printf("{\n");
 \}              printf("}\n");
-
-call            printf("call: %s\n", yytext);
+,               printf(",\n");
+;               printf(";\n");
 
 \n 
 .
