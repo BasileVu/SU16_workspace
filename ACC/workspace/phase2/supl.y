@@ -47,10 +47,25 @@ extern char *yytext;
 %token IDENT
 %token STRING
 
+%token IF
+%token ELSE
+%token WHILE
+%token PRINT
+%token READ
+%token WRITE
+%token RETURN
+
+%token EQ
+%token LTE
+%token GTE
+%token GT
+%token LT
+
 %type<n>    NUMBER
 %type<str>  ident IDENT
 %type<idl>  identl vardecl
 %type<t>    type
+%type<str>  STRING
 
 %%
 
@@ -85,15 +100,20 @@ vardecl     : type identl                     {
                                                 $$ = $identl;
                                               }
             ;
-
+identl      : ident                           { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; }
+            | identl ',' ident                { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; $$->next = $1; }
+            ;
+            
 type        : INTEGER                         { $$ = tInteger; }
             | VOID                            { $$ = tVoid; }
             ;
-            
+
+/*            
 fundecl     : type ident '(' ')' stmtblock
             | type ident '(' vardecl ')' stmtblock
             ;
-
+*/
+            
 stmtblock   : '{' '}'
             | '{' stmtl '}'
             ;
@@ -113,14 +133,14 @@ stmt        : vardecl ';'
             | print
             ;
             
-assign      : ident '=' expression
+assign      : ident '=' expression ';'
             ;
             
-if          : "if" '(' condition ')' stmtblock
-            | "if" '(' condition ')' stmtblock "else" stmtblock
+if          : IF '(' condition ')' stmtblock
+            | IF '(' condition ')' stmtblock ELSE stmtblock
             ;
     
-while       : "while" '(' condition ')' stmtblock
+while       : WHILE '(' condition ')' stmtblock
             ;
 
 call        : ident '(' ')'
@@ -131,17 +151,17 @@ exprl       : expression
             | exprl ',' expression
             ;
             
-return      : "return" ';'
-            | "return" expression ';' 
+return      : RETURN ';'
+            | RETURN expression ';' 
             ;
 
-read        : "read" ident ';'
+read        : READ ident ';'
             ;
             
-write        : "write" expression ';'
+write       : WRITE expression ';'
             ;            
             
-print       : "print" string ';'
+print       : PRINT string ';'
             ;
 
 expression  : number
@@ -156,19 +176,17 @@ expression  : number
             | call
             ;
 
-condition   : expression "==" expression 
-            | expression "<=" expression 
-            | expression '<' expression
+condition   : expression EQ expression 
+            | expression LTE expression 
+            | expression LT expression
+            | expression GTE expression
+            | expression GT expression
             ;
             
 number      : NUMBER
             ;
             
 ident       : IDENT
-            ;
-            
-identl      : ident                           { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; }
-            | identl ',' ident                { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; $$->next = $1; }
             ;
             
 string      : STRING
