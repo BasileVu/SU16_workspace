@@ -89,16 +89,17 @@ vardecl     : type identl                     {
 type        : INTEGER                         { $$ = tInteger; }
             | VOID                            { $$ = tVoid; }
             ;
-
-identl      : ident                           { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; }
-            | ident ',' identl                { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; $$->next = $1; }
+            
+fundecl     : type ident '(' ')' stmtblock
+            | type ident '(' vardecl ')' stmtblock
             ;
 
-stmtblock   : '{' optstmt '}'
+stmtblock   : '{' '}'
+            | '{' stmtl '}'
             ;
             
-optstmt     : %empty
-            | stmt
+stmtl       : stmt
+            | stmt stmtl
             ;
             
 stmt        : vardecl ';'
@@ -115,28 +116,23 @@ stmt        : vardecl ';'
 assign      : ident '=' expression
             ;
             
-if          : "if" '(' condition ')' stmtblock optelse
-            ;
-        
-optelse     : %empty
-            | "else" stmtblock
+if          : "if" '(' condition ')' stmtblock
+            | "if" '(' condition ')' stmtblock "else" stmtblock
             ;
     
 while       : "while" '(' condition ')' stmtblock
             ;
 
-call        : ident '(' params ')'
-            ;
-
-params      : %empty
-            | paraml
+call        : ident '(' ')'
+            | ident '(' exprl ')'
             ;
             
-paraml      : expression
-            | expression ',' paraml
+exprl       : expression
+            | exprl ',' expression
             ;
             
-return      : "return" optexpr ';'
+return      : "return" ';'
+            | "return" expression ';' 
             ;
 
 read        : "read" ident ';'
@@ -171,11 +167,11 @@ number      : NUMBER
 ident       : IDENT
             ;
             
-string      : STRING
+identl      : ident                           { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; }
+            | identl ',' ident                { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; $$->next = $1; }
             ;
             
-optexpr     : %empty
-            | expression
+string      : STRING
             ;
 %%
 
