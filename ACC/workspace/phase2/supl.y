@@ -45,6 +45,7 @@ extern char *yytext;
 %token INTEGER VOID
 %token NUMBER
 %token IDENT
+%token STRING
 
 %type<n>    NUMBER
 %type<str>  ident IDENT
@@ -90,16 +91,92 @@ type        : INTEGER                         { $$ = tInteger; }
             ;
 
 identl      : ident                           { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; }
-            | identl ',' ident                { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; $$->next = $1; }
+            | ident ',' identl                { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; $$->next = $1; }
             ;
 
-stmtblock   :
-              '{'       '}'
+stmtblock   : '{' optstmt '}'
+            ;
+            
+optstmt     : %empty
+            | stmt
+            ;
+            
+stmt        : vardecl ';'
+            | assign
+            | if
+            | while
+            | call ;
+            | return
+            | read
+            | write
+            | print
+            ;
+            
+assign      : ident '=' expression
+            ;
+            
+if          : "if" '(' condition ')' stmtblock optelse
+            ;
+        
+optelse     : %empty
+            | "else" stmtblock
+            ;
+    
+while       : "while" '(' condition ')' stmtblock
             ;
 
+call        : ident '(' params ')'
+            ;
+
+params      : %empty
+            | paraml
+            ;
+            
+paraml      : expression
+            | expression ',' paraml
+            ;
+            
+return      : "return" optexpr ';'
+            ;
+
+read        : "read" ident ';'
+            ;
+            
+write        : "write" expression ';'
+            ;            
+            
+print       : "print" string ';'
+            ;
+
+expression  : number
+            | ident
+            | expression '+' expression 
+            | expression '-' expression 
+            | expression '*' expression 
+            | expression '/' expression 
+            | expression '%' expression 
+            | expression '^' expression 
+            |'(' expression ')' 
+            | call
+            ;
+
+condition   : expression "==" expression 
+            | expression "<=" expression 
+            | expression '<' expression
+            ;
+            
+number      : NUMBER
+            ;
+            
 ident       : IDENT
             ;
-
+            
+string      : STRING
+            ;
+            
+optexpr     : %empty
+            | expression
+            ;
 %%
 
 int main(int argc, char *argv[])

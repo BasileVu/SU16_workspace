@@ -25,6 +25,7 @@ int yycolumn = 1;
 
 DIGIT     [0-9]
 ALPHA     [A-Za-z_]
+NUMBER    {DIGIT}+
 
 %%
 
@@ -32,7 +33,8 @@ int                       { return(INTEGER); }
 void                      { return(VOID); }
 
 {ALPHA}({ALPHA}|{DIGIT})* { yylval.str = strdup(yytext); return(IDENT); }
-{DIGIT}+                  { yylval.n = atoi(yytext);     return(NUMBER); }
+{DIGIT}+                  { yylval.n = atoi(yytext);     return(NUMBER); }                  
+\".*\"                    { yylval.str = strdup(yytext); return(STRING); }
 
 [ \t]+                    // ignore whitespace
 [\n]+                     { yycolumn = 1; }           // reset column on newlines
