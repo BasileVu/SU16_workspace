@@ -42,8 +42,6 @@ return                      { return(RETURN); }
 
 "=="                        { return(EQ); }
 "<="                        { return(LTE); }
-">="                        { return(GTE); }
-">"                         { return(GT); }
 "<"                         { return(LT); }
 
 {ALPHA}({ALPHA}|{DIGIT})*   { yylval.str = strdup(yytext); return(IDENT); }

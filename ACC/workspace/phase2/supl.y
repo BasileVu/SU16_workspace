@@ -69,43 +69,70 @@ extern char *yytext;
 
 %%
 
-program     :                                 { stack = init_stack(NULL); symtab = init_symtab(stack, NULL); } 
-              decll                           { cb = init_codeblock(""); 
-                                                stack = init_stack(stack); symtab = init_symtab(stack, symtab);
+program     :                               { 
+                                                stack = init_stack(NULL); 
+                                                symtab = init_symtab(stack, NULL); 
+                                            } 
+              decll                         { 
+                                                cb = init_codeblock(""); 
+                                                stack = init_stack(stack); 
+                                                symtab = init_symtab(stack, symtab);
                                                 rettype = tVoid;
-                                              } 
-              stmtblock                       { add_op(cb, opHalt, NULL);
+                                            } 
+              stmtblock                     { 
+                                                add_op(cb, opHalt, NULL);
                                                 dump_codeblock(cb); save_codeblock(cb, fn_pfx);
-                                                Stack *pstck = stack; stack = stack->uplink; delete_stack(pstck);
-                                                Symtab *pst = symtab; symtab = symtab->parent; delete_symtab(pst);
-                                              }
+                                                
+                                                Stack *pstck = stack; 
+                                                stack = stack->uplink; 
+                                                delete_stack(pstck);
+                                                
+                                                Symtab *pst = symtab; 
+                                                symtab = symtab->parent; 
+                                                delete_symtab(pst);
+                                            }
             ;
 
 decll       : %empty
-            | decll vardecl ';'               { free_idlist($vardecl); }
+            | decll vardecl ';'             { free_idlist($vardecl); }
             ;
 
-vardecl     : type identl                     { 
-                                                IDlist *l = $identl;
-                                                while (l) { 
-                                                  if (insert_symbol(symtab, l->id, $type) == NULL) {
+vardecl     : type identl                   {
+                                                if ($type == tVoid) {
                                                     char *error = NULL;
-                                                    asprintf(&error, "Duplicated identifier '%s'.", l->id);
+                                                    asprintf(&error, "void type is not allowed.");
                                                     yyerror(error);
                                                     free(error);
                                                     YYABORT;
-                                                  }
-                                                  l = l->next;
+                                                }
+
+                                                IDlist *l = $identl;
+                                                while (l) { 
+                                                    if (insert_symbol(symtab, l->id, $type) == NULL) {
+                                                        char *error = NULL;
+                                                        asprintf(&error, "Duplicated identifier '%s'.", l->id);
+                                                        yyerror(error);
+                                                        free(error);
+                                                        YYABORT;
+                                                    }
+                                                    l = l->next;
                                                 }
                                                 $$ = $identl;
-                                              }
+                                            }
             ;
-identl      : ident                           { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; }
-            | identl ',' ident                { $$ = (IDlist*)calloc(1, sizeof(IDlist)); $$->id = $ident; $$->next = $1; }
+identl      : ident                         { 
+                                                $$ = (IDlist*)calloc(1, sizeof(IDlist)); 
+                                                $$->id = $ident; 
+                                            }
+            | identl ',' ident              { 
+                                                $$ = (IDlist*)calloc(1, sizeof(IDlist)); 
+                                                $$->id = $ident; 
+                                                $$->next = $1;
+                                            }
             ;
             
-type        : INTEGER                         { $$ = tInteger; }
-            | VOID                            { $$ = tVoid; }
+type        : INTEGER                       { $$ = tInteger; }
+            | VOID                          { $$ = tVoid; }
             ;
 
 /*            
@@ -179,8 +206,6 @@ expression  : number
 condition   : expression EQ expression
             | expression LTE expression
             | expression LT expression
-            | expression GTE expression
-            | expression GT expression
             ;
             
 number      : NUMBER
