@@ -67,7 +67,7 @@ extern char *yytext;
 %type<str>  ident IDENT
 %type<idl>  identl vardecl paraml
 %type<t>    type
-%type<str>  STRING
+%type<str>  string STRING
 %type<bpr>  IF WHILE
 
 %%
@@ -271,13 +271,14 @@ return      : RETURN ';'                                {
 
             ;
 
-read        : READ ident ';'                            { /*add_op(cb, opRead, NULL);*/ }
+read        : READ ident ';'                            { add_op(cb, opRead, NULL); }
             ;
             
-write       : WRITE expression ';'                      { /*add_op(cb, opWrite, NULL);*/ }
+write       : WRITE expression ';'                      { add_op(cb, opWrite, NULL); }
             ;            
             
-print       : PRINT string ';'                          { /*add_op(cb, opPrint, NULL);*/ }
+print       : PRINT string ';'                          {   
+                                                            add_op(cb, opPrint, $string); }
             ;
 
 expression  : number                                    { add_op(cb, opPush, (void*)(long int)$number); }
