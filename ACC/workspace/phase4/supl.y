@@ -143,7 +143,7 @@ fundecl     : type ident                     {
 
                                                         if (find_func(fn_list, $ident)) {
                                                             char *error = NULL;
-                                                            asprintf(&error, "function name already exists.");
+                                                            asprintf(&error, "function name '%s' already exists.", $ident);
                                                             yyerror(error);
                                                             free(error);
                                                             YYABORT;
@@ -217,7 +217,7 @@ assign      : ident '=' expression ';'                  {
                                                             Symbol* sym = find_symbol(symtab, $ident, sGlobal);
                                                             if (sym == NULL) {
                                                                 char *error = NULL;
-                                                                asprintf(&error, "Unknown identifier %s.", $ident);
+                                                                asprintf(&error, "Unknown identifier '%s'.", $ident);
                                                                 yyerror(error);
                                                                 free(error);
                                                                 YYABORT;
@@ -272,7 +272,7 @@ call        : ident '(' optcallpars ')'                     {
                                                                 Funclist *f = find_func(fn_list, $ident);
                                                                 if (f == NULL) {
                                                                     char *error = NULL;
-                                                                    asprintf(&error, "function %s was not declared.", $ident);
+                                                                    asprintf(&error, "function '%s' was not declared.", $ident);
                                                                     yyerror(error);
                                                                     free(error);
                                                                     YYABORT;
@@ -280,7 +280,7 @@ call        : ident '(' optcallpars ')'                     {
 
                                                                 if ($optcallpars != f->narg) {
                                                                     char *error = NULL;
-                                                                    asprintf(&error, "the number of arguments for %s does not match.", f->id);
+                                                                    asprintf(&error, "the number of arguments for '%s' does not match.", f->id);
                                                                     yyerror(error);
                                                                     free(error);
                                                                     YYABORT;
@@ -340,7 +340,7 @@ expression  : number                                    { add_op(cb, opPush, (vo
                                                             Symbol* sym = find_symbol(symtab, $ident, sGlobal);
                                                             if (sym == NULL) {
                                                                 char *error = NULL;
-                                                                asprintf(&error, "Unknown identifier %s.", $ident);
+                                                                asprintf(&error, "Unknown identifier '%s'.", $ident);
                                                                 yyerror(error);
                                                                 free(error);
                                                                 YYABORT;
