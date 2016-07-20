@@ -1,25 +1,35 @@
+int isPrime(int n) {
+
+    if (n < 2) {
+        return 0;
+    }
+    
+    if (n == 2) {
+        return 1;
+    }
+    
+    int j;
+    j = 3;
+    
+    while (j < (n/2) + 1) { 
+        if (n % j == 0) {
+            return 0;
+        }
+    
+        j = j + 1;
+    }
+    return 1;
+}
+
 {
     int i, j, stop;
-    write 2;
     
-    i = 3;
+    i = 0;
     
     while (i < 100) {
-        j = 3;
-        stop = 0;
-        
-        while ((j <= i) && (stop == 0)) {
-            if (i % j == 0) {
-                stop = 1;
-            }
-        
-            j = j + 1;
-        }
-        
-        if (stop == 0) {
+        if (isPrime(i) == 1) {
             write i;
         }
-        
-        i = i + 2;
+        i = i + 1;
     }
 }
