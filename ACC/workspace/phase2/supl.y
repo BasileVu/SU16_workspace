@@ -163,19 +163,24 @@ write       : WRITE expression ';'
             
 print       : PRINT string ';'
             ;
-            
-binaryop    : '+' | '-' | '*' | '/' | '%' | '^';
 
 expression  : number
             | ident
-            | expression binaryop expression
+            | expression '+' expression
+            | expression '-' expression
+            | expression '*' expression
+            | expression '/' expression
+            | expression '%' expression
+            | expression '^' expression
             |'(' expression ')'
             | call
             ;
-
-comparison  : EQ | LTE | LT | GTE | GT;
             
-condition   : expression comparison expression
+condition   : expression EQ expression
+            | expression LTE expression
+            | expression LT expression
+            | expression GTE expression
+            | expression GT expression
             ;
             
 number      : NUMBER
