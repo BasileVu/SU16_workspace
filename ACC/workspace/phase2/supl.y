@@ -25,19 +25,21 @@ extern char *yytext;
 }
 
 %union {
-  long int n;
-  char     *str;
-  IDlist   *idl;
-  EType    t;
+    long int n;
+    char     *str;
+    IDlist   *idl;
+    EType    t;
 }
 
 %code {
-  Stack   *stack = NULL;
-  Symtab *symtab = NULL;
-  CodeBlock *cb  = NULL;
+    Stack   *stack = NULL;
+    Symtab *symtab = NULL;
+    CodeBlock *cb  = NULL;
 
-  char *fn_pfx   = NULL;
-  EType rettype  = tVoid;
+    char *fn_pfx   = NULL;
+    EType rettype  = tVoid;
+    
+    Funclist *fn_list = NULL;
 }
 
 %start program
@@ -57,8 +59,6 @@ extern char *yytext;
 
 %token EQ
 %token LTE
-%token GTE
-%token GT
 %token LT
 
 %type<n>    NUMBER
@@ -94,7 +94,7 @@ program     :                               {
             ;
 
 decll       : %empty
-            | decll vardecl ';'             { free_idlist($vardecl); }
+            | decll vardecl ';'             { delete_idlist($vardecl); }
             | decll fundecl
             ;
 
@@ -136,7 +136,18 @@ type        : INTEGER                       { $$ = tInteger; }
             | VOID                          { $$ = tVoid; }
             ;
           
-fundecl     : type ident '(' ')' stmtblock
+fundecl     : type ident '(' ')' stmtblock          { 
+                                                        if (find_func(fn_list, $ident)) {
+                                                            char *error = NULL;
+                                                            asprintf(&error, "function name already exists.");
+                                                            yyerror(error);
+                                                            free(error);
+                                                            YYABORT;
+                                                        }
+                                                        
+                                                        
+                                                        
+                                                    }   
             | type ident '(' vardecl ')' stmtblock
             ;
             
@@ -145,7 +156,7 @@ stmtblock   : '{' '}'
             ;
             
 stmtl       : stmt
-            | stmt stmtl
+            | stmtl stmt
             ;
             
 stmt        : vardecl ';'
