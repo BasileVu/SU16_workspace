@@ -298,7 +298,7 @@ exprl       : expression                                {  $$ = 1; }
             
 return      : RETURN ';'                                {
                                                              if (rettype != tVoid) {
-                                                                 yyerror("Expression expected.");
+                                                                 yyerror("Function should have a return value.");
                                                                  YYABORT;
                                                              } else {
                                                              add_op(cb, opReturn, NULL);
@@ -307,7 +307,7 @@ return      : RETURN ';'                                {
                                                         }
             | RETURN expression ';'                     { 
                                                             if (rettype == tVoid) {
-                                                                yyerror("Function has no return value.");
+                                                                yyerror("Function shouldn't have any return value.");
                                                                 YYABORT;
                                                             } else {
                                                             add_op(cb, opReturn, NULL);}
