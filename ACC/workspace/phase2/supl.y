@@ -61,9 +61,9 @@ extern char *yytext;
 %token LTE
 %token LT
 
-%type<n>    NUMBER
+%type<n>    NUMBER optcallpars exprl
 %type<str>  ident IDENT
-%type<idl>  identl vardecl
+%type<idl>  identl vardecl paraml
 %type<t>    type
 %type<str>  STRING
 
@@ -136,7 +136,8 @@ type        : INTEGER                       { $$ = tInteger; }
             | VOID                          { $$ = tVoid; }
             ;
           
-fundecl     : type ident '(' ')' stmtblock          { 
+fundecl     : type ident '(' paraml ')' { 
+
                                                         if (find_func(fn_list, $ident)) {
                                                             char *error = NULL;
                                                             asprintf(&error, "function name already exists.");
@@ -152,52 +153,26 @@ fundecl     : type ident '(' ')' stmtblock          {
                                                         func->next = fn_list;
                                                         
                                                         fn_list = func;
-                                                    }   
-            | type[t1] ident '(' type[t2] identl ')' stmtblock  { 
-
-                                                        if (find_func(fn_list, $ident)) {
-                                                            char *error = NULL;
-                                                            asprintf(&error, "function name already exists.");
-                                                            yyerror(error);
-                                                            free(error);
-                                                            YYABORT;
-                                                        }
                                                         
-                                                        Funclist *func = (Funclist*)calloc(1, sizeof(Funclist));
-                                                        func->id = $ident;
-                                                        func->rettype = $t1;
-                                                        func->narg = 0;
-                                                        func->next = fn_list;
-                                                        
-                                                        fn_list = func;
-
-                                                        if ($t2 == tVoid) {
-                                                            char *error = NULL;
-                                                            asprintf(&error, "void type is not allowed.");
-                                                            yyerror(error);
-                                                            free(error);
-                                                            YYABORT;
-                                                        }
-                                                        
-                                                        IDlist *l = $identl;
-                                                        while (l) { 
-                                                            if (insert_symbol(symtab, l->id, $t2) == NULL) {
-                                                                char *error = NULL;
-                                                                asprintf(&error, "Duplicated identifier '%s'.", l->id);
-                                                                yyerror(error);
-                                                                free(error);
-                                                                YYABORT;
-                                                            }
+                                                        IDlist *l = $paraml;
+                                                        while (l) {
                                                             l = l->next;
                                                             func->narg++;
                                                         }
+
+                                                        rettype = $type;
                                                     }
+            stmtblock                               
             ;
-            
+          
+paraml      :  %empty                               { $$ = NULL; }
+            |  vardecl
+            ;
+  
 stmtblock   : '{' '}'
             | '{' stmtl '}'
             ;
-            
+                        
 stmtl       : stmt
             | stmtl stmt
             ;
@@ -223,32 +198,48 @@ if          : IF '(' condition ')' stmtblock
 while       : WHILE '(' condition ')' stmtblock
             ;
 
-call        : ident '(' ')'                                 { 
-                                                                if (!find_func(fn_list, $ident)) {
+call        : ident '(' optcallpars ')'                     { 
+
+                                                                Funclist *f = find_func(fn_list, $ident);
+                                                                if (f == NULL) {
                                                                     char *error = NULL;
                                                                     asprintf(&error, "function %s was not declared.", $ident);
                                                                     yyerror(error);
                                                                     free(error);
                                                                     YYABORT;
                                                                 }
-                                                            }
-            | ident '(' exprl ')'                           {
-                                                                if (!find_func(fn_list, $ident)) {
+
+                                                                if ($optcallpars != f->narg) {
                                                                     char *error = NULL;
-                                                                    asprintf(&error, "function %s was not declared.", $ident);
+                                                                    asprintf(&error, "the number of arguments for %s does not match.", f->id);
                                                                     yyerror(error);
                                                                     free(error);
                                                                     YYABORT;
                                                                 }
                                                             }
+
+optcallpars : %empty                                    {  $$ = 0; }
+            | exprl
+            ;
+      
+exprl       : expression                                {  $$ = 1; }
+            | exprl ',' expression                      {  $$ = $1 + 1; }
             ;
             
-exprl       : expression
-            | exprl ',' expression
-            ;
-            
-return      : RETURN ';'
-            | RETURN expression ';' 
+return      : RETURN ';'                                {
+                                                             if (rettype != tVoid) {
+                                                                 yyerror("Expression expected.");
+                                                                 YYABORT;
+                                                             }
+
+                                                        }
+            | RETURN expression ';'                     { 
+                                                            if (rettype == tVoid) {
+                                                                yyerror("Function has no return value.");
+                                                                YYABORT;
+                                                            }
+                                                        }
+
             ;
 
 read        : READ ident ';'
