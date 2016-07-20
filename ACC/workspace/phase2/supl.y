@@ -95,6 +95,7 @@ program     :                               {
 
 decll       : %empty
             | decll vardecl ';'             { free_idlist($vardecl); }
+            | decll fundecl
             ;
 
 vardecl     : type identl                   {
@@ -134,12 +135,10 @@ identl      : ident                         {
 type        : INTEGER                       { $$ = tInteger; }
             | VOID                          { $$ = tVoid; }
             ;
-
-/*            
+          
 fundecl     : type ident '(' ')' stmtblock
             | type ident '(' vardecl ')' stmtblock
             ;
-*/
             
 stmtblock   : '{' '}'
             | '{' stmtl '}'

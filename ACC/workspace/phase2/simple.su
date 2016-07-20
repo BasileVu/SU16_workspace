@@ -1,5 +1,9 @@
 int a;
 
+int test() {
+    return 42;
+}
+
 {
   int b;
 

@@ -1,3 +1,5 @@
-void a;
+int a;
 
-{}
+{
+    print "";
+}
