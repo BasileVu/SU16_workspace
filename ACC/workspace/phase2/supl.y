@@ -223,8 +223,24 @@ if          : IF '(' condition ')' stmtblock
 while       : WHILE '(' condition ')' stmtblock
             ;
 
-call        : ident '(' ')'
-            | ident '(' exprl ')'
+call        : ident '(' ')'                                 { 
+                                                                if (!find_func(fn_list, $ident)) {
+                                                                    char *error = NULL;
+                                                                    asprintf(&error, "function %s was not declared.", $ident);
+                                                                    yyerror(error);
+                                                                    free(error);
+                                                                    YYABORT;
+                                                                }
+                                                            }
+            | ident '(' exprl ')'                           {
+                                                                if (!find_func(fn_list, $ident)) {
+                                                                    char *error = NULL;
+                                                                    asprintf(&error, "function %s was not declared.", $ident);
+                                                                    yyerror(error);
+                                                                    free(error);
+                                                                    YYABORT;
+                                                                }
+                                                            }
             ;
             
 exprl       : expression
