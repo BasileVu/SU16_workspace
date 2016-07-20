@@ -145,10 +145,53 @@ fundecl     : type ident '(' ')' stmtblock          {
                                                             YYABORT;
                                                         }
                                                         
+                                                        Funclist *func = (Funclist*)calloc(1, sizeof(Funclist));
+                                                        func->id = $ident;
+                                                        func->rettype = $type;
+                                                        func->narg = 0;
+                                                        func->next = fn_list;
                                                         
-                                                        
+                                                        fn_list = func;
                                                     }   
-            | type ident '(' vardecl ')' stmtblock
+            | type[t1] ident '(' type[t2] identl ')' stmtblock  { 
+
+                                                        if (find_func(fn_list, $ident)) {
+                                                            char *error = NULL;
+                                                            asprintf(&error, "function name already exists.");
+                                                            yyerror(error);
+                                                            free(error);
+                                                            YYABORT;
+                                                        }
+                                                        
+                                                        Funclist *func = (Funclist*)calloc(1, sizeof(Funclist));
+                                                        func->id = $ident;
+                                                        func->rettype = $t1;
+                                                        func->narg = 0;
+                                                        func->next = fn_list;
+                                                        
+                                                        fn_list = func;
+
+                                                        if ($t2 == tVoid) {
+                                                            char *error = NULL;
+                                                            asprintf(&error, "void type is not allowed.");
+                                                            yyerror(error);
+                                                            free(error);
+                                                            YYABORT;
+                                                        }
+                                                        
+                                                        IDlist *l = $identl;
+                                                        while (l) { 
+                                                            if (insert_symbol(symtab, l->id, $t2) == NULL) {
+                                                                char *error = NULL;
+                                                                asprintf(&error, "Duplicated identifier '%s'.", l->id);
+                                                                yyerror(error);
+                                                                free(error);
+                                                                YYABORT;
+                                                            }
+                                                            l = l->next;
+                                                            func->narg++;
+                                                        }
+                                                    }
             ;
             
 stmtblock   : '{' '}'
