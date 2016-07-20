@@ -126,7 +126,7 @@ stmt        : vardecl ';'
             | assign
             | if
             | while
-            | call ;
+            | call ';'
             | return
             | read
             | write
