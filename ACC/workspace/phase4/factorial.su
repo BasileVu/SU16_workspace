@@ -1,0 +1,23 @@
+int fact(int n) {
+    int i, res;
+    
+    i = 1;
+    res = 1;
+    
+    while (i <= n) {
+        res = res * i;
+        i = i + 1;
+    }
+    
+    return res;
+}
+
+{
+    print "enter a number: ";
+    
+    int n;
+    read n;
+    write n;
+    print "! is ";
+    write fact(n);
+}
