@@ -1,0 +1,7 @@
+void a(int b,c) {
+    return;
+}
+
+{
+    a(1,2);
+}
