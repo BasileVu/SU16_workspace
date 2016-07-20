@@ -194,7 +194,10 @@ stmt        : vardecl ';'
 assign      : ident '=' expression ';'                  { 
                                                             Symbol* sym = find_symbol(symtab, $ident, sGlobal);
                                                             if (sym == NULL) {
-                                                                yyerror("Unknown identifier %s.", $ident);
+                                                                char *error = NULL;
+                                                                asprintf(&error, "Unknown identifier %s.", $ident);
+                                                                yyerror(error);
+                                                                free(error);
                                                                 YYABORT;
                                                             }
                                                             add_op(cb, opStore, sym);
@@ -224,7 +227,24 @@ else        : %empty
             | ELSE stmtblock
             ;
 
-while       : WHILE '(' condition ')' stmtblock
+while       : WHILE                                     {   $WHILE = (BPrecord*)calloc(1,sizeof(BPrecord));
+                                                            $WHILE->pos = cb->nops; }
+
+              '(' condition ')'                         {
+                                                            
+                                                            Operation *tb = add_op(cb, $condition, NULL);
+                                                            Operation *fb = add_op(cb, opJump, NULL);
+                                                            $WHILE->ttrue = add_backpatch($WHILE->ttrue, tb);
+                                                            $WHILE->tfalse = add_backpatch($WHILE->tfalse, fb);
+                                                            pending_backpatch(cb, $WHILE->ttrue);
+
+                                                        }
+              
+              stmtblock                                 {
+                                                            Operation* start = get_op(cb, $WHILE->pos);
+                                                            Operation* backJmp = add_op(cb, opJump, start);
+                                                            pending_backpatch(cb, $WHILE->tfalse);
+                                                        }
             ;
 
 call        : ident '(' optcallpars ')'                     { 
@@ -245,6 +265,8 @@ call        : ident '(' optcallpars ')'                     {
                                                                     free(error);
                                                                     YYABORT;
                                                                 }
+                                                                
+                                                                //add_op(cb, opCall, (void*)f);
                                                             }
 
 optcallpars : %empty                                    {  $$ = 0; }
@@ -285,7 +307,10 @@ expression  : number                                    { add_op(cb, opPush, (vo
             | ident                                     { 
                                                             Symbol* sym = find_symbol(symtab, $ident, sGlobal);
                                                             if (sym == NULL) {
-                                                                yyerror("Unknown identifier %s.", $ident);
+                                                                char *error = NULL;
+                                                                asprintf(&error, "Unknown identifier %s.", $ident);
+                                                                yyerror(error);
+                                                                free(error);
                                                                 YYABORT;
                                                             }
                                                             add_op(cb, opLoad, sym);
@@ -298,9 +323,7 @@ expression  : number                                    { add_op(cb, opPush, (vo
             | expression '%' expression                 { add_op(cb, opMod, NULL); }
             | expression '^' expression                 { add_op(cb, opPow, NULL); }
             |'(' expression ')'                         
-            | call                                      { 
-                                                            
-                                                        }            
+            | call                                               
             ;
             
 condition   : expression EQ expression                  { $$ = opJeq; }
