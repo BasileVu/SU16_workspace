@@ -1,11 +1,15 @@
 {
+    print "How many Fibonacci numbers ? ";
+    int n;
+    read n;
+
     int i, part1, part2, sum;
     i = 0;
     
     part1 = 0;
     part2 = 1;
     
-    while (i < 42) {
+    while (i < n) {
         write part1;
         sum = part1 + part2;
         part1 = part2;

@@ -22,11 +22,14 @@ int isPrime(int n) {
 }
 
 {
-    int i, j, stop;
-    
+    int n;
+    print "Enter the upper bound of the range to evaluate (0 to x): ";
+    read n;
+
+    int i;
     i = 0;
     
-    while (i < 100) {
+    while (i < n) {
         if (isPrime(i) == 1) {
             write i;
         }

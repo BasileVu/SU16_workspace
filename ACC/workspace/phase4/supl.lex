@@ -46,7 +46,8 @@ return                      { return(RETURN); }
 
 {ALPHA}({ALPHA}|{DIGIT})*   { yylval.str = strdup(yytext); return(IDENT); }
 {DIGIT}+                    { yylval.n = atoi(yytext);     return(NUMBER); }                  
-\".*\"                      { yylval.str = strdup(yytext); return(STRING); }
+\".*\"                      { char *tmp = yytext; tmp++; tmp[strlen(tmp)-1] = '\0';
+                                yylval.str = strdup(tmp); return(STRING); }
 
 [ \t]+                      // ignore whitespace
 [\n]+                       { yycolumn = 1; }           // reset column on newlines

@@ -316,8 +316,17 @@ return      : RETURN ';'                                {
 
             ;
 
-read        : READ ident ';'                            { Symbol* sym = find_symbol(symtab, $ident, sGlobal);
-                                                          add_op(cb, opRead, sym); }
+read        : READ ident ';'                            { 
+                                                            Symbol *sym = find_symbol(symtab, $ident, sGlobal);
+                                                            if (sym == NULL) {
+                                                                char *error = NULL;
+                                                                asprintf(&error, "Unknown identifier '%s'.", $ident);
+                                                                yyerror(error);
+                                                                free(error);
+                                                                YYABORT;
+                                                            }
+                                                            add_op(cb, opRead, sym); 
+                                                        }
             ;
             
 write       : WRITE expression ';'                      { add_op(cb, opWrite, NULL); }
