@@ -1,0 +1,11 @@
+int add(int x, y){
+  int result;
+  result = x + y;
+  return result;
+}
+
+{
+   int z;
+   z = add(5,3);
+   write z;
+}

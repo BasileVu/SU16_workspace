@@ -67,7 +67,7 @@ extern char *yytext;
 %type<str>  ident IDENT
 %type<idl>  identl vardecl paraml
 %type<t>    type
-%type<str>  string STRING
+%type<str>  STRING string
 %type<bpr>  IF WHILE
 
 %%
@@ -139,7 +139,7 @@ type        : INTEGER                       { $$ = tInteger; }
             | VOID                          { $$ = tVoid; }
             ;
           
-fundecl     : type ident '(' paraml ')' { 
+fundecl     : type ident                     { 
 
                                                         if (find_func(fn_list, $ident)) {
                                                             char *error = NULL;
@@ -148,6 +148,13 @@ fundecl     : type ident '(' paraml ')' {
                                                             free(error);
                                                             YYABORT;
                                                         }
+                                                       
+                                              }
+              '(' paraml ')'                  {
+                                                        cb = init_codeblock($ident);  
+                                                        stack = init_stack(stack); 
+                                                        symtab = init_symtab(stack, symtab); 
+                                                        rettype = $type;
                                                         
                                                         Funclist *func = (Funclist*)calloc(1, sizeof(Funclist));
                                                         func->id = $ident;
@@ -159,21 +166,36 @@ fundecl     : type ident '(' paraml ')' {
                                                         
                                                         IDlist *l = $paraml;
                                                         while (l) {
+                                                            add_op(cb,opStore,find_symbol(symtab, l->id, sGlobal));
                                                             l = l->next;
                                                             func->narg++;
+                                                             
                                                         }
 
-                                                        rettype = $type;
+                                                                                                               
                                                     }
-            stmtblock                               
+            stmtblock                               {  
+                                                        dump_codeblock(cb); save_codeblock(cb, fn_pfx);
+
+                                                        Stack *pstck = stack;
+                                                        stack = stack->uplink;
+                                                        delete_stack(pstck);
+                                                        Symtab *pst = symtab;
+                                                        symtab = symtab->parent;
+                                                    }
             ;
           
 paraml      :  %empty                               { $$ = NULL; }
             |  vardecl
             ;
   
-stmtblock   : '{' '}'
-            | '{' stmtl '}'
+stmtblock   : '{' '}'                               
+            | '{'                           { symtab = init_symtab(stack, symtab); }
+               stmtl                        { 
+                                                Symtab *pst = symtab;
+                                                symtab = symtab->parent;
+                                            }
+              '}'  
             ;
                         
 stmtl       : stmt
@@ -227,23 +249,21 @@ else        : %empty
             | ELSE stmtblock
             ;
 
-while       : WHILE                                     {   $WHILE = (BPrecord*)calloc(1,sizeof(BPrecord));
-                                                            $WHILE->pos = cb->nops; }
-
-              '(' condition ')'                         {
-                                                            
-                                                            Operation *tb = add_op(cb, $condition, NULL);
-                                                            Operation *fb = add_op(cb, opJump, NULL);
-                                                            $WHILE->ttrue = add_backpatch($WHILE->ttrue, tb);
-                                                            $WHILE->tfalse = add_backpatch($WHILE->tfalse, fb);
-                                                            pending_backpatch(cb, $WHILE->ttrue);
-
+while       : WHILE                                     {   
+                                                            $WHILE = (BPrecord*)calloc(1,sizeof(BPrecord));
+                                                            $WHILE->pos = cb->nops; 
                                                         }
-              
-              stmtblock                                 {
-                                                            Operation* start = get_op(cb, $WHILE->pos);
-                                                            Operation* backJmp = add_op(cb, opJump, start);
-                                                            pending_backpatch(cb, $WHILE->tfalse);
+              '(' condition ')'                         {   
+                                                            Operation* tJmp = add_op(cb, $condition, NULL);
+                                                            Operation* fJmp = add_op(cb, opJump, NULL);
+                                                            $WHILE->ttrue = add_backpatch($WHILE->ttrue, tJmp);
+                                                            $WHILE->tfalse = add_backpatch($WHILE->tfalse, fJmp);
+                                                            pending_backpatch(cb, $WHILE->ttrue); }
+
+              stmtblock                                 {    
+                                                            Operation* start = get_op(cb, $WHILE->pos); 
+                                                            Operation* backJmp = add_op(cb, opJump, start); 
+                                                            pending_backpatch(cb, $WHILE->tfalse); 
                                                         }
             ;
 
@@ -265,8 +285,7 @@ call        : ident '(' optcallpars ')'                     {
                                                                     free(error);
                                                                     YYABORT;
                                                                 }
-                                                                
-                                                                //add_op(cb, opCall, (void*)f);
+                                                                add_op(cb, opCall, $ident);
                                                             }
 
 optcallpars : %empty                                    {  $$ = 0; }
@@ -281,6 +300,8 @@ return      : RETURN ';'                                {
                                                              if (rettype != tVoid) {
                                                                  yyerror("Expression expected.");
                                                                  YYABORT;
+                                                             } else {
+                                                             add_op(cb, opReturn, NULL);
                                                              }
 
                                                         }
@@ -288,19 +309,21 @@ return      : RETURN ';'                                {
                                                             if (rettype == tVoid) {
                                                                 yyerror("Function has no return value.");
                                                                 YYABORT;
-                                                            }
+                                                            } else {
+                                                            add_op(cb, opReturn, NULL);}
                                                         }
+
 
             ;
 
-read        : READ ident ';'                            { add_op(cb, opRead, NULL); }
+read        : READ ident ';'                            { Symbol* sym = find_symbol(symtab, $ident, sGlobal);
+                                                          add_op(cb, opRead, sym); }
             ;
             
 write       : WRITE expression ';'                      { add_op(cb, opWrite, NULL); }
             ;            
             
-print       : PRINT string ';'                          {   
-                                                            add_op(cb, opPrint, $string); }
+print       : PRINT string ';'                          { add_op(cb, opPrint, $string); }
             ;
 
 expression  : number                                    { add_op(cb, opPush, (void*)(long int)$number); }
@@ -323,7 +346,9 @@ expression  : number                                    { add_op(cb, opPush, (vo
             | expression '%' expression                 { add_op(cb, opMod, NULL); }
             | expression '^' expression                 { add_op(cb, opPow, NULL); }
             |'(' expression ')'                         
-            | call                                               
+            | call                                      { 
+                                                            
+                                                        }            
             ;
             
 condition   : expression EQ expression                  { $$ = opJeq; }
