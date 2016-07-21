@@ -148,13 +148,14 @@ fundecl     : type ident                     {
                                                             free(error);
                                                             YYABORT;
                                                         }
-                                                       
-                                              }
-              '(' paraml ')'                  {
+                                                        
                                                         cb = init_codeblock($ident);  
                                                         stack = init_stack(stack); 
                                                         symtab = init_symtab(stack, symtab); 
                                                         rettype = $type;
+                                                       
+                                              }
+              '(' paraml ')'                  {
                                                         
                                                         Funclist *func = (Funclist*)calloc(1, sizeof(Funclist));
                                                         func->id = $ident;
