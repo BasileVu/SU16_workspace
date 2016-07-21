@@ -1,4 +1,4 @@
-# SU_workspace
+# SU16_workspace
 Workspace for the 2016 Summer University.
 
 Includes: 
