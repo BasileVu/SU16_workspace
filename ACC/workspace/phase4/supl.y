@@ -175,6 +175,11 @@ fundecl     : type ident                     {
                                                                                                                
                                                     }
             stmtblock                               {  
+                                                        if (rettype == tInteger) {
+                                                            add_op(cb, opPush, 0);
+                                                        }
+                                                        add_op(cb, opReturn, NULL);
+                                                        
                                                         dump_codeblock(cb); save_codeblock(cb, fn_pfx);
 
                                                         Stack *pstck = stack;
@@ -182,6 +187,7 @@ fundecl     : type ident                     {
                                                         delete_stack(pstck);
                                                         Symtab *pst = symtab;
                                                         symtab = symtab->parent;
+
                                                     }
             ;
           

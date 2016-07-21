@@ -1,5 +1,13 @@
-int a() {
-    return 42;
+int a(int b) {
+    write b;
+    if (b == 10) {
+        return b;
+    } else {
+        a(b+1);
+    }
+    return b;
 }
 
-{}
+{
+    write a(0);
+}
